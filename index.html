@@ -65,7 +65,7 @@
 <div id="status">Кошелёк не подключён</div>
 
 <div class="actions">
-    <button id="send-tx-btn" style="background-color:#0098EA; color: #fff" class="action" disabled>1) Отправить тестовую транзакцию</button>
+    <button id="send-tx-btn" style="background-color: teal; color: #fff" class="action" disabled>1) Отправить тестовую транзакцию</button>
     <button id="sign-data-btn" style="background-color:#0098EA; color: #fff" class="action" disabled>2) Запросить signData</button>
 </div>
 
@@ -108,12 +108,15 @@
     const account = tonConnectUI.wallet?.account;
     if (!account) return;
 
+    const recipientAddress = 'UQDx-bKcMSnIOKg_-WR5HSKRtDX7JXF-TOA4RE428CAiCaGi';
+
     const transaction = {
         validUntil: Math.floor(Date.now() / 1000) + 300,
         network: account.chain,
+        from: account.address,
         messages: [
             {
-                address: account.address,
+                address: recipientAddress,
                 amount: '1000000'
             }
         ]
@@ -128,7 +131,6 @@
         log('sendTransaction ERROR', {
             message: e?.message,
             name: e?.name,
-            code: e?.code,
             raw: String(e)
         });
     }
