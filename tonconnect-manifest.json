@@ -1,7 +1,7 @@
 {
-    "url": "https://REPLACE_WITH_YOUR_HOSTED_URL/",
+    "url": "https://tsvetkov-alexey.github.io/tonkeeper-poc/",
     "name": "Tonkeeper Bug Bounty PoC",
     "iconUrl": "https://ton.org/download/ton_symbol.png",
-    "termsOfUseUrl": "https://REPLACE_WITH_YOUR_HOSTED_URL/",
-    "privacyPolicyUrl": "https://REPLACE_WITH_YOUR_HOSTED_URL/"
+    "termsOfUseUrl": "https://tsvetkov-alexey.github.io/tonkeeper-poc/",
+    "privacyPolicyUrl": "https://tsvetkov-alexey.github.io/tonkeeper-poc/"
 }
