@@ -65,8 +65,8 @@
 <div id="status">Кошелёк не подключён</div>
 
 <div class="actions">
-    <button id="send-tx-btn" class="action" disabled>1) Отправить тестовую транзакцию</button>
-    <button id="sign-data-btn" class="action" disabled>2) Запросить signData</button>
+    <button id="send-tx-btn" style="background-color:#0098EA; color: #fff" class="action" disabled>1) Отправить тестовую транзакцию</button>
+    <button id="sign-data-btn" style="background-color:#0098EA; color: #fff" class="action" disabled>2) Запросить signData</button>
 </div>
 
 <div id="log">Логи появятся здесь…</div>
@@ -104,50 +104,62 @@
     });
 
     // --- 1. sendTransaction: this is the dialog WITHOUT dApp origin shown ---
-    sendTxBtn.addEventListener('click', async () => {
-        const address = tonConnectUI.account?.address;
-        if (!address) return;
+   sendTxBtn.addEventListener('click', async () => {
+    const account = tonConnectUI.wallet?.account;
+    if (!account) return;
 
-        const transaction = {
-            validUntil: Math.floor(Date.now() / 1000) + 300,
-            network: '-3', // CHAIN.TESTNET
-            messages: [
-                {
-                    address, // send a dust amount to self, harmless test-only transfer
-                    amount: '1000000' // 0.001 TON
-                }
-            ]
-        };
+    const transaction = {
+        validUntil: Math.floor(Date.now() / 1000) + 300,
+        network: account.chain,
+        messages: [
+            {
+                address: account.address,
+                amount: '1000000'
+            }
+        ]
+    };
 
-        log('sendTransaction REQUEST', transaction);
-        try {
-            const result = await tonConnectUI.sendTransaction(transaction);
-            log('sendTransaction RESULT', result);
-        } catch (e) {
-            log('sendTransaction ERROR', String(e));
-        }
-    });
+    log('sendTransaction REQUEST', transaction);
+
+    try {
+        const result = await tonConnectUI.sendTransaction(transaction);
+        log('sendTransaction RESULT', result);
+    } catch (e) {
+        log('sendTransaction ERROR', {
+            message: e?.message,
+            name: e?.name,
+            code: e?.code,
+            raw: String(e)
+        });
+    }
+});
 
     // --- 2. signData: this is the dialog WITH dApp origin shown, for comparison ---
     signDataBtn.addEventListener('click', async () => {
-        const address = tonConnectUI.account?.address;
-        if (!address) return;
+    const account = tonConnectUI.wallet?.account;
+    if (!account) return;
 
-        const textData = {
-            type: 'text',
-            text: 'Tonkeeper bug bounty PoC: signData request used for screenshot comparison against sendTransaction.',
-            network: '-3',
-            from: address
-        };
+    const textData = {
+        type: 'text',
+        text: 'Tonkeeper bug bounty PoC: signData request used for screenshot comparison against sendTransaction.',
+        network: account.chain,
+        from: account.address
+    };
 
-        log('signData REQUEST', textData);
-        try {
-            const result = await tonConnectUI.signData(textData);
-            log('signData RESULT', result);
-        } catch (e) {
-            log('signData ERROR', String(e));
-        }
-    });
+    log('signData REQUEST', textData);
+
+    try {
+        const result = await tonConnectUI.signData(textData);
+        log('signData RESULT', result);
+    } catch (e) {
+        log('signData ERROR', {
+            message: e?.message,
+            name: e?.name,
+            code: e?.code,
+            raw: String(e)
+        });
+    }
+});
 </script>
 
 </body>
