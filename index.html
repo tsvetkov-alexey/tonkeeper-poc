@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tonkeeper Bug Bounty PoC — TonConnect test dApp</title>
+<script src="https://unpkg.com/@tonconnect/ui@3.0.0/dist/tonconnect-ui.min.js"></script>
+<style>
+    :root { color-scheme: light dark; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        max-width: 640px;
+        margin: 40px auto;
+        padding: 0 20px;
+        line-height: 1.5;
+    }
+    h1 { font-size: 22px; }
+    .warn {
+        background: #fff3cd;
+        border: 1px solid #ffe08a;
+        color: #6b5300;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+    #connect-button { margin: 16px 0; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0; }
+    button.action {
+        padding: 12px 18px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        background: #f5f5f5;
+        cursor: pointer;
+        font-size: 15px;
+    }
+    button.action:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.action:hover:not(:disabled) { background: #ebebeb; }
+    #status { font-size: 14px; margin: 12px 0; color: #555; }
+    #log {
+        background: #111;
+        color: #0f0;
+        font-family: "Consolas", monospace;
+        font-size: 12px;
+        padding: 14px;
+        border-radius: 8px;
+        white-space: pre-wrap;
+        word-break: break-all;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+</style>
+</head>
+<body>
+
+<h1>Tonkeeper Bug Bounty PoC</h1>
+<p>Тестовый TonConnect dApp для сравнения диалогов подтверждения <code>sendTransaction</code> и <code>signData</code>.</p>
+
+<div class="warn">
+    ⚠️ Только TESTNET. Не подключайте кошелёк с реальными средствами в mainnet-режиме.
+    Переключите Tonkeeper в тестовую сеть (Settings → Dev Menu / Testnet) перед подключением.
+</div>
+
+<div id="connect-button"></div>
+<div id="status">Кошелёк не подключён</div>
+
+<div class="actions">
+    <button id="send-tx-btn" class="action" disabled>1) Отправить тестовую транзакцию</button>
+    <button id="sign-data-btn" class="action" disabled>2) Запросить signData</button>
+</div>
+
+<div id="log">Логи появятся здесь…</div>
+
+<script>
+    const logEl = document.getElementById('log');
+    const statusEl = document.getElementById('status');
+    const sendTxBtn = document.getElementById('send-tx-btn');
+    const signDataBtn = document.getElementById('sign-data-btn');
+
+    function log(label, data) {
+        const time = new Date().toLocaleTimeString();
+        logEl.textContent += `\n[${time}] ${label}\n${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}\n`;
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    const manifestUrl = new URL('tonconnect-manifest.json', window.location.href).toString();
+
+    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+        manifestUrl,
+        buttonRootId: 'connect-button'
+    });
+
+    tonConnectUI.onStatusChange(wallet => {
+        if (wallet) {
+            statusEl.textContent = `Подключено: ${wallet.account.address} (chain ${wallet.account.chain})`;
+            sendTxBtn.disabled = false;
+            signDataBtn.disabled = false;
+            log('CONNECTED', wallet);
+        } else {
+            statusEl.textContent = 'Кошелёк не подключён';
+            sendTxBtn.disabled = true;
+            signDataBtn.disabled = true;
+        }
+    });
+
+    // --- 1. sendTransaction: this is the dialog WITHOUT dApp origin shown ---
+    sendTxBtn.addEventListener('click', async () => {
+        const address = tonConnectUI.account?.address;
+        if (!address) return;
+
+        const transaction = {
+            validUntil: Math.floor(Date.now() / 1000) + 300,
+            network: '-3', // CHAIN.TESTNET
+            messages: [
+                {
+                    address, // send a dust amount to self, harmless test-only transfer
+                    amount: '1000000' // 0.001 TON
+                }
+            ]
+        };
+
+        log('sendTransaction REQUEST', transaction);
+        try {
+            const result = await tonConnectUI.sendTransaction(transaction);
+            log('sendTransaction RESULT', result);
+        } catch (e) {
+            log('sendTransaction ERROR', String(e));
+        }
+    });
+
+    // --- 2. signData: this is the dialog WITH dApp origin shown, for comparison ---
+    signDataBtn.addEventListener('click', async () => {
+        const address = tonConnectUI.account?.address;
+        if (!address) return;
+
+        const textData = {
+            type: 'text',
+            text: 'Tonkeeper bug bounty PoC: signData request used for screenshot comparison against sendTransaction.',
+            network: '-3',
+            from: address
+        };
+
+        log('signData REQUEST', textData);
+        try {
+            const result = await tonConnectUI.signData(textData);
+            log('signData RESULT', result);
+        } catch (e) {
+            log('signData ERROR', String(e));
+        }
+    });
+</script>
+
+</body>
+</html>
